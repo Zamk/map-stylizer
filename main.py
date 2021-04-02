@@ -24,6 +24,8 @@ for subdir, dirs, files in os.walk(os.path.join(os.getcwd(), sourcePath)):
 
 import constants as c
 from MainWindowHandlers import MainWindowHandlers
+from mapwidget import MapWidget
+from configuration import Configuration
 
 
 if __name__ == '__main__':
@@ -38,10 +40,27 @@ if __name__ == '__main__':
         os.mkdir(c.FOLDER_CONFIGS)
     if not os.path.exists(c.FOLDER_USER_CONFIGS):
         os.mkdir(c.FOLDER_USER_CONFIGS)
+    if not os.path.exists(c.FOLDER_OUTPUT_CONSOLE):
+        os.mkdir(c.FOLDER_OUTPUT_CONSOLE)
 
-    # Start the program
-    window = MainWindowHandlers()
-    window.initialize()
-    window.show()
+    if '--no-gui' in  sys.argv:
+        print(sys.argv)
+        input_fname = 'planet_48.9,55.703_49.317,55.871.osm'
+        output_fname = 'output/console/map.jpg'
+        max_dim = 6000
 
-    sys.exit(app.exec_())
+        # Create and save map render using the MapWidget object
+        widget = MapWidget()
+        widget.setConfiguration(Configuration())
+        widget.setOSMFile(input_fname)
+        widget.saveImage(max_dim, output_fname)
+
+        # Kill application
+        app.quit()
+    else:
+        # Start the program
+        window = MainWindowHandlers()
+        window.initialize()
+        window.show()
+
+        sys.exit(app.exec_())

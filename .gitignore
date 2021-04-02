@@ -1,1 +1,7 @@
 *.osm
+*.jpg
+/configs
+/data
+/output
+user.config
+__pycache__

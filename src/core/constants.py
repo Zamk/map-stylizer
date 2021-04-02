@@ -23,7 +23,8 @@ from PyQt5.QtCore import Qt
 
 # Resource Strings
 FOLDER_DATA = 'data'
-FOLDER_OUTPUT = 'output'
+FOLDER_OUTPUT = 'output/gui'
+FOLDER_OUTPUT_CONSOLE = 'output/console'
 FOLDER_CONFIGS = 'configs'
 FOLDER_USER_CONFIGS = 'configs/user'
 FILE_ICON = 'src/resources/icon.png'
