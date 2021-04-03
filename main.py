@@ -51,6 +51,7 @@ if __name__ == '__main__':
 
         # Create and save map render using the MapWidget object
         widget = MapWidget()
+        widget.resize(986, 631)
         widget.setConfiguration(Configuration())
         widget.setOSMFile(input_fname)
         widget.saveImage(max_dim, output_fname)
