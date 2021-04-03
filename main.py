@@ -51,6 +51,8 @@ if __name__ == '__main__':
 
         # Create and save map render using the MapWidget object
         widget = MapWidget()
+        
+        # Same size as in MainWindowHandlers
         widget.resize(986, 631)
         widget.setConfiguration(Configuration())
         widget.setOSMFile(input_fname)
