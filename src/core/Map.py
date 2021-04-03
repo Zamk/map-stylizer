@@ -11,7 +11,7 @@ but not points. Relations consist of Ways, which consist of Nodes.
 
 import xml.etree.ElementTree as ET
 
-from PyQt5.QtGui import QPen, QColor, QPainterPath
+from PyQt5.QtGui import QPen, QColor, QPainterPath, QPolygonF
 from PyQt5.QtCore import QPointF
 
 from Transform import Transform
@@ -88,10 +88,14 @@ class Relation:
         self._id = parent.attrib['id']
         self._wids = []
         self._tags = {}
+        self._roles = {}
+
 
         for child in parent:
             if child.tag == 'member' and child.attrib['type'] == 'way':
-                self._wids.append(int(child.attrib['ref']))
+                wid = int(child.attrib['ref'])
+                self._wids.append(wid)
+                self._roles[wid] = child.attrib['role']
             elif child.tag == 'tag':
                 key, value = child.attrib['k'], child.attrib['v']
                 self._tags[key] = value
@@ -112,6 +116,10 @@ class Relation:
     @property
     def tags(self):
         return self._tags
+    
+    @property
+    def roles(self):
+        return self._roles
 
 
 class Map:
@@ -359,13 +367,19 @@ class Map:
         Returns:
         --------
         """
-        ways = []
+        
+        inner_ways = []
+        outer_ways = []
+
         for wid in relation.WIDs:
             # return if we don't have the data for this relation
             # Note, some OSM files don't include all of the ways that are in
             # relations... kinda annoying actually
             if wid in self._ways.keys():
-                ways.append(self._ways[wid])
+                if relation.roles[wid] == 'inner':
+                    inner_ways.append(self._ways[wid])
+                else:
+                    outer_ways.append(self._ways[wid])
             else:
                 return
 
@@ -374,22 +388,32 @@ class Map:
         value = self._config.getValue(styleKey)
         path = QPainterPath()
 
-        # Trace out the ways using a QPainterPath
-        for way in ways:
-            points = []
+        #render polygons
+        outer_points = []
+        for way in outer_ways:
             for nid in way.NIDs:
-                points.append([self._nodes[nid].x,
+                outer_points.append([self._nodes[nid].x,
                                self._nodes[nid].y])
 
-            path.moveTo(*points[0])
-            for x, y in points[1:]:
-                path.lineTo(x, y)
-            path.closeSubpath()
+        inner_polygons = []
+        for way in inner_ways:
+            inner_points = []
+            for nid in way.NIDs:
+                inner_points.append([self._nodes[nid].x,
+                               self._nodes[nid].y])
+            inner_polygons.append(QPolygonF([QPointF(p[0], p[1]) for p in inner_points]))
 
-        # Draw the ways via the QPainter
-        if type(value) == QPen:
-            value.setWidthF(self._scale*value.widthF())
-            p.setPen(value)
-            p.drawPath(path)
-        elif type(value) == QColor:
-            p.fillPath(path, value)
+        pen = QPen(QColor(255,0,0))
+        pen.setWidth(5)
+        p.setPen(pen)
+
+        main_polygon = QPolygonF([QPointF(p[0], p[1]) for p in outer_points])
+
+        #for polygon in inner_polygons:
+            #main_polygon = main_polygon.subtracted(polygon)
+            #p.saveImage('polygons/' + str(polygon) + '.jpg', 'jpg', 100)
+
+        path = QPainterPath()
+        path.addPolygon(main_polygon)
+
+        p.fillPath(path, value)
